@@ -1,0 +1,2 @@
+ALTER TABLE user
+ADD COLUMN age INT(2) NOT NULL AFTER surname
