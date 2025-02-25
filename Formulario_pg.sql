@@ -10,7 +10,7 @@ CREATE TABLE formulario (
 CREATE TABLE pedidos (
     id SERIAL PRIMARY KEY,
     fecha DATE NOT NULL,
-    id_cliente INT REFERENCES clientes(id_cliente) --LLave foranea Referenciado con tabla de llave primaria 
+    id_cliente INT NOT NULL REFERENCES clientes(id_cliente) ON DELETE CASCADE --LLave foranea Referenciado con tabla de llave primaria 
 );
 
 
@@ -90,3 +90,8 @@ SELECT * FROM formulario WHERE email NOT LIKE '%example.com';
 
 -- Obtener registros con un campo específico en minúsculas (nombre en minúsculas)
 SELECT id, LOWER(nombre) as nombre_minusculas FROM formulario;
+
+--Obtener los clientes que han realizado al menos una compra, sin repetir nombres.
+SELECT DISTINCT c.nombre 
+FROM clientes c 
+JOIN ventas v ON c.id_cliente = v.id_cliente;
