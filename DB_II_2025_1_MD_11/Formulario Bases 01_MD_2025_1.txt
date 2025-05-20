@@ -263,3 +263,9 @@ RETURN p.nombre, p.activo, p.admin;
 MATCH (p:Persona)-[r]-(otro)
 RETURN p.nombre, type(r) AS tipoRelacion, count(*) AS total;
 
+35.)  Municipios de la misma provincia conectados entre si
+MATCH (m1:Municipios)-[:PERTENECE]->(p:Provincias) <-[:PERTENECE] - (m2:Municipios),
+      (m1)-[:CONECTA]->(m2)
+WHERE m1 <> m2
+RETURN m1.nombre AS Origen, m2.nombre AS Destino, p.nombre_provincia AS Provincia
+
