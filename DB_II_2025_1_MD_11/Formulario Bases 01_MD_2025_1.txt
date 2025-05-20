@@ -1,0 +1,188 @@
+1.) Municipio mas NUEVO respecto al año de fundación
+
+MATCH (m:Municipios)
+RETURN m as Municipio, m.fundacion as Fundacion
+ORDER BY Fundacion DESC;
+
+2.) Ordenar los municipos por mayor cantidad de habitantes 
+
+MATCH (m:Municipios)
+RETURN m,m.poblacion AS Poblacion ORDER BY Poblacion DESC;
+
+3.)Población total del departamento haciendo la suma de la cantidad de población por municipio
+
+MATCH (m:Municipios)
+RETURN sum(m.poblacion) AS PoblacionTotal;
+
+4.)Población total de habitantes que pertenecen a los municipios de la provincia de Vélez
+
+MATCH (n:Municipios)-[:PERTENECE]->(n1:Provincias {nombre_provincia: "Vélez"})
+RETURN sum(n.poblacion) AS Total;
+
+5.)Municipio mas cercano a Bucaramanga por distancia en km recorrida ordenados de menor a mayor
+
+MATCH (m1:Municipios {nombre: "Bucaramanga"})-[r:CONECTA]-(m2:Municipios)
+RETURN m2.id_municipio AS MunicipioCercano, r.distancia_km AS Distancia
+ORDER BY Distancia ASC;
+
+6.)Total de municipios que pertenecen a la provincia de "García Rovira"
+
+MATCH(n:Municipios)-[:PERTENECE]-(:Provincias{nombre_provincia : "García Rovira"})
+Return count(n) as municipios;
+
+7.)Área total de extensión en km2 del área metropolitana de Bucaramanga
+
+MATCH (n:Municipios)
+Where n.nombre In["Bucaramanga", "Piedecuesta","Floridablanca","Girón"]
+RETURN sum(n.superficie_km2) As Total;
+
+8.)Total de municipios que pertenecen a la provincia de "Guanentá" y que tienen una población mayor o igual a 8000
+
+MATCH(n:Municipios)-[:PERTENECE]-(:Provincias{nombre_provincia : "Guanentá"})
+WHERE n.poblacion >= 8000 
+Return count(n) as Habitantes_mayor_8000;
+
+9.)Porcentaje de la población de Floridablanca respecto al total de la población del área metropolitana siendo esta una provincia
+
+MATCH (n:Municipios)-[:PERTENECE]->(n1:Provincias {nombre_provincia: "Metropolitana"})
+WITH sum(n.poblacion) AS Total
+MATCH (p:Municipios {nombre: "Floridablanca"})
+RETURN round((p.poblacion * 100.0) / Total, 2) AS Porcentaje;
+
+10.)Cantidad de municipios que pertenecen a la provincia de Vélez
+
+MATCH (n:Municipios)-[:PERTENECE]->(n1:Provincias {nombre_provincia: "Vélez"})
+RETURN n;
+
+11.) Cantidad de municipios que pertenecen a la provincia de Vélez y tienen menos de 5000 habitantes 
+
+MATCH(n:Municipios)-[:PERTENECE]-(:Provincias{nombre_provincia : "Vélez"})
+WHERE n.poblacion < 5000 
+Return count(n) as Municipios_menor_5000;
+
+12.) Municipio mas ANTIGUO respecto al año de fundación
+
+MATCH (m:Municipios)
+RETURN m as Municipio, m.fundacion as Fundacion
+ORDER BY Fundacion ASC
+
+13.) Orden de los municipios de Santander por cantidad de habitantes de menor a mayor 
+
+MATCH (m:Municipios)
+RETURN m.nombre as Municipio, m.poblacion as Total_Hab
+ORDER BY Total_Hab ASC;
+
+14.) Total de la población de los municipios que pertenecen a la provincia comunera
+
+MATCH (m:Municipios)-[:PERTENECE]->(p:Provincias {nombre_provincia: "Comunera"})
+RETURN sum(m.poblacion) AS PoblacionTotal;
+
+15.) Municipio mas cercano a San Gil por tiempo en minutos recorrido ordenados de menor a mayor
+
+MATCH (m1:Municipios{nombre:"San Gil"})-[r:CONECTA]-(m2:Municipios)
+RETURN m2 AS MunicipioCercano, r.tiempo_aprox_min AS TiempoEnMinutos
+ORDER BY TiempoEnMinutos ASC;
+
+16.) Porcentaje de la población de Bucaramanga respecto a la población total del departamento de Santander
+
+MATCH (n:Municipios)
+WITH sum(n.poblacion) AS Total,
+sum(CASE WHEN n.nombre = "Bucaramanga"THEN n.poblacion ELSE 0 END) as Total_Bucaramanga
+RETURN toFloat((Total_Bucaramanga*100.0)/Total) as Porcentaje;
+
+17.) Población total del departamento de Santander
+
+MATCH (n:Municipios)
+WITH sum(n.poblacion) AS Total
+RETURN Total;
+
+18.) Buscar post que no se hayan publicado por ningún usuario retorna la id del post
+
+MATCH (p:Post)
+WHERE NOT(:User)-[:POSTED]->(p)
+RETURN p.id_post;
+
+19.)Busca los post realizados entre al año 2015 y el año 2025 por cada año
+
+MATCH(n:Post)-[r:POSTED]-()
+WITH n.fecha.year AS Anio ,count(r) As Total
+WHERE Anio >= 2016 AND Anio <=2025
+ORDER BY Anio
+Return Anio,Total;
+
+20.) Calcula el promedio de publicaciones realizadas por cada usuario
+
+MATCH(n:User)-[r:POSTED]-()
+WITH n,count(r) As Total
+RETURN avg(Total);
+
+21.) Porcentaje de usuarios nacidos antes del año 2000
+
+MATCH (u:User)
+WITH count(u) AS total,
+     sum(CASE WHEN u.anio_nacimiento < 2000 THEN 1 ELSE 0 END) AS antes2000
+RETURN toInteger((antes2000 * 100.0) / total) AS porcentaje;
+
+22.) Encontrar la ruta más corta entre un usuario y una publicación
+
+MATCH (c1:User)
+MATCH (c2:Post)
+where c1.id_usuario=2 AND c2.id_post=103
+MATCH p = shortestPath((c1)-[*..3]-(c2))
+RETURN p;
+
+23.) Encontrar la ruta más corta entre un usuario y una publicación en especifico el usuario y la publicación
+
+MATCH (a:User {id_usuario : 2}), (b:User {id_post: 103})
+MATCH p = shortestPath((a)--(b))
+RETURN p;
+
+24.)Cuenta cuántos usuarios tienen al menos 12 conexiones
+
+MATCH (u:User)-[:FOLLOW]-(otro:User)
+WITH u, count(DISTINCT otro) AS conexiones
+WHERE conexiones >= 12
+RETURN count(u) AS Total;
+
+25.) Cuenta el número de pares de usuarios que se siguen mutuamente
+
+MATCH (n1:User)-[:FOLLOW]->(n2:User),
+(n2)-[:FOLLOW]->(n1)
+WHERE n1<n2
+RETURN COUNT(*) as Total;
+
+
+26.) Devuelve todos los usuarios que tienen exactamente 5 seguidores
+
+MATCH (n:Users)
+WITH n, count{()-[:FOLLOW]->(n)} as Total_Seguidores
+WHERE Total_Seguidores=5
+RETURN n;
+
+27.)Crea una restricción de unicidad sobre el atributo title de los nodos con etiqueta Movie, pero solo si aún no existe.
+
+CREATE CONSTRAINT movie_title IF NOT EXISTS FOR (m:Movie) REQUIRE m.title IS UNIQUE;
+
+28.)Crea o encuentra un nodo de película llamado "The Matrix" y establece propiedades solo si se crea nuevo
+
+MERGE (TheMatrix:Movie {title:'The Matrix'}) ON CREATE SET TheMatrix.released=1999, TheMatrix.tagline='Welcome to the Real World'
+
+29.) Busca la relación ACTED_IN entre los nodos Keanu y TheMatrix con la propiedad roles: ['Neo'].
+ I.)Si esa relación no existe, la crea.
+ II.)Si ya existe, no la duplica.
+
+MERGE (Keanu)-[:ACTED_IN {roles:['Neo']}]->(TheMatrix)
+
+30.) Crear relaciones entre nodos ya creados
+
+MATCH(e1:Estudiante) WHERE e1.nombre="Juan"
+MATCH(e2:Estudiante) WHERE e2.nombre="Camila"
+MATCH(e3:Estudiante) WHERE e3.nombre="Pedro"
+MATCH(c:Curso) WHERE c.nombre="Bases de Datos"
+CREATE r1= (e1)-[:CONOCE]->(e2)
+CREATE r2= (e1)-[:CONOCE]->(e3)
+CREATE r3= (e3)-[:CONOCE]->(e2)
+CREATE r4= (e1)-[:MATRICULO]->(c)
+CREATE r5= (e2)-[:MATRICULO]->(c)
+CREATE r6= (e3)-[:MATRICULO]->(c);
+
